@@ -1,0 +1,44 @@
+#!/bin/sh
+
+DB="$2"
+FILE="$1"
+tableName="devinfo"
+
+usage(){
+	echo "${1} filename database_name"
+}
+
+[ $# -ne 2 ] && usage $0 && exit 0
+sqlite3 $DB "create table $tableName (idx integer primary key autoincrement,descr, phone, imsi, sn, ip, lac, cid, reg integer default 0,mask,rx,tx);"
+
+cat $FILE | awk -F"," 'BEGIN{
+	print "Begin update the database !!"
+	i=1;
+}''{
+	if(i == 1){
+		split(dbinfo,arr,",");
+		DB=arr[1];
+		tableName=arr[2];
+	}
+	if(i>=1000){
+		commd="sqlite3 "DB" \"insert into  "tableName" values(\\\""i"\\\",\\\"网点"i"\\\",\\\"1331234"i"\\\",\\\"46001123456"i"\\\",\\\"10001099"i"\\\",\\\"192.168.10.18\\\",\\\""$2"\\\",\\\""$1"\\\",0,\\\"255.255.255.0\\\",\\\"0\\\",\\\"0\\\");\""
+	}else if(i>=100){
+		commd="sqlite3 "DB" \"insert into  "tableName" values(\\\""i"\\\",\\\"网点"i"\\\",\\\"13312340"i"\\\",\\\"460011234560"i"\\\",\\\"10001099"i"\\\",\\\"192.168.10.18\\\",\\\""$2"\\\",\\\""$1"\\\",0,\\\"255.255.255.0\\\",\\\"0\\\",\\\"0\\\");\""
+	}else if(i >= 10){
+		commd="sqlite3 "DB" \"insert into  "tableName" values(\\\""i"\\\",\\\"网点"i"\\\",\\\"133123400"i"\\\",\\\"4600112345600"i"\\\",\\\"10001099"i"\\\",\\\"192.168.10.18\\\",\\\""$2"\\\",\\\""$1"\\\",0,\\\"255.255.255.0\\\",\\\"0\\\",\\\"0\\\");\""
+	}else{
+		commd="sqlite3 "DB" \"insert into  "tableName" values(\\\""i"\\\",\\\"网点"i"\\\",\\\"1331234000"i"\\\",\\\"46001123456000"i"\\\",\\\"10001099"i"\\\",\\\"192.168.10.18\\\",\\\""$2"\\\",\\\""$1"\\\",0,\\\"255.255.255.0\\\",\\\"0\\\",\\\"0\\\");\""
+	}
+	print "execute :",commd
+	system(commd);
+	i++;
+}''END{
+	commd="sqlite3 "DB" \"update "tableName" set reg=0;\"";
+	print "execute :",commd
+	system(commd);
+	print "  "
+	commd="sqlite3 "DB" \"select * from "tableName" where idx<"i";\"";
+	print "execute :",commd
+	system(commd);
+	print "End update database !!"
+}'  dbinfo="$DB,$tableName"
